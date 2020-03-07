@@ -1,0 +1,31 @@
+{
+  "name": "back",
+  "version": "1.0.0",
+  "description": "backend consulta ssl e info de dominios",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/camilovp01/back.git"
+  },
+  "author": "Camilo V",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/camilovp01/back/issues"
+  },
+  "homepage": "https://github.com/camilovp01/back#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cheerio": "^1.0.0-rc.3",
+    "express": "^4.17.1",
+    "node-ssllabs": "^1.1.2",
+    "request": "^2.88.2",
+    "whois-json": "^2.0.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}
