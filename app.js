@@ -10,9 +10,11 @@ app.use(bodyParser.json());
 
 //importar rutas
 var appRoutes = require('./routes/app');
+var infoDomain = require('./routes/infoDomain');
 
 //Rutas
 app.use('/', appRoutes);
+app.use('/infodomain', infoDomain);
 
 
 //Escuchar peticiones
