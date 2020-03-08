@@ -4,8 +4,24 @@ const ssllabs = require('node-ssllabs');
 const whois = require('whois-json');
 const request = require("request");
 const cheerio = require('cheerio');
+const bridge = require('../business/bridge');
 
 const app = express();
+
+app.get('/gethistory', async (req, resp) => {
+    let history = await bridge.getSearchHistory();
+    resp.status(200).json({
+        history: history.rows
+    });
+});
+
+app.post('/saveHistory', async (req, respo) => {
+    let domain = req.body.domain;
+    let result = await bridge.insertHistory(domain);
+    respo.status(200).json({
+        rowCount: result.rowCount
+    });
+});
 
 app.get('/', async (req, resp) => {
 
