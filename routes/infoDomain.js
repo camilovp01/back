@@ -10,8 +10,9 @@ const app = express();
 app.get('/', async (req, resp) => {
 
     let domain = req.query.domain;
+    let cache = req.query.cache;
 
-    let sslInfo = await sslInformation(domain);
+    let sslInfo = await sslInformation(domain, cache);
     let endpoints = sslInfo.endpoints;
     let servers = [];
     let address = '';
@@ -19,6 +20,7 @@ app.get('/', async (req, resp) => {
     let country = '';
     let owner = '';
     let dataPage = {}
+    let progress = 0;
 
     if (endpoints) {
         dataPage = await getDataFromPage(domain);
@@ -26,6 +28,7 @@ app.get('/', async (req, resp) => {
 
             address = endpoints[i].ipAddress;
             ssl_grade = endpoints[i].grade;
+            progress = endpoints[i].progress;
 
             serverInfo = await additionalInfo(address);
             country = serverInfo[0].data.country;
@@ -37,12 +40,14 @@ app.get('/', async (req, resp) => {
                     address,
                     ssl_grade,
                     country,
-                    owner
+                    owner,
+                    progress
                 }
             ];
         }
 
         resp.status(200).json({
+            status: sslInfo.status,
             servers,
             servers_changed: '',
             ssl_grade: '',
@@ -67,14 +72,18 @@ app.get('/', async (req, resp) => {
 
 })
 
-var sslInformation = (domain) => {
+var sslInformation = (domain, cache) => {
+    let key = (cache === "true") ? 'fromCache' : 'startNew';
     return new Promise((resolve, reject) => {
-        ssllabs.analyze({
-            "host": domain,
-            "publish": true,
-            "startNew": true,
-            "all": "done"
-        }, (err, data) => {
+        let options = {
+            'host': domain,
+            'publish': true,
+            // 'startNew': true,
+            // 'maxAge': "2",
+            [key]: true,
+            'all': "done"
+        }
+        ssllabs.analyze(options, (err, data) => {
             if (err) {
                 reject('Error consumiendo servicio SSL', err)
             } else {
