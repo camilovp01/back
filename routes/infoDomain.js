@@ -11,8 +11,9 @@ app.get('/', async (req, resp) => {
 
     let domain = req.query.domain;
     let cache = req.query.cache;
+    let startNew = req.query.startNew;
 
-    let sslInfo = await sslInformation(domain, cache);
+    let sslInfo = await sslInformation(domain, cache, startNew);
     let endpoints = sslInfo.endpoints;
     let servers = [];
     let address = '';
@@ -72,20 +73,35 @@ app.get('/', async (req, resp) => {
 
 })
 
-var sslInformation = (domain, cache) => {
-    let key = (cache === "true") ? 'fromCache' : 'startNew';
+var sslInformation = (domain, cache, startNew) => {
+    let key = '';
+    let val = '';
+    if (cache == 'true') {
+        key = 'fromCache';
+        val = 'true';
+    } else if (startNew === 'true') {
+        key = 'startNew';
+        val = 'true';
+    } else if (startNew === 'false') {
+        key = 'startNew';
+        val = 'false';
+    }
     return new Promise((resolve, reject) => {
         let options = {
             'host': domain,
             'publish': true,
             // 'startNew': true,
             // 'maxAge': "2",
-            [key]: true,
+            [key]: val,
             'all': "done"
         }
-        ssllabs.analyze(options, (err, data) => {
-            if (err) {
-                reject('Error consumiendo servicio SSL', err)
+        ssllabs.analyze(options, (error, data) => {
+            if (error) {
+                resp.status(500).json({
+                    error,
+                    message: 'Error consumiendo servicio SSL'
+                });
+                reject('Error consumiendo servicio SSL', error)
             } else {
                 resolve(data);
             }
