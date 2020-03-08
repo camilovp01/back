@@ -11,7 +11,7 @@ const app = express();
 app.get('/gethistory', async (req, resp) => {
     let history = await bridge.getSearchHistory();
     resp.status(200).json({
-        history: history.rows
+        items: history.rows
     });
 });
 
@@ -29,7 +29,9 @@ app.get('/', async (req, resp) => {
     let cache = req.query.cache;
     let startNew = req.query.startNew;
 
-    let sslInfo = await sslInformation(domain, cache, startNew);
+    let sslInfo = await sslInformation(domain, cache, startNew, resp);
+    let prevSslInfo = await sslInformation(domain, cache = true, startNew, resp);
+
     let endpoints = sslInfo.endpoints;
     let servers = [];
     let address = '';
@@ -39,7 +41,17 @@ app.get('/', async (req, resp) => {
     let dataPage = {}
     let progress = 0;
 
+    let ssl_LowestGrade;
+    let previous_ssl_grade;
+    let servers_changed;
+
     if (endpoints) {
+
+        ssl_LowestGrade = getLowestSslGrade(endpoints);
+        previous_ssl_grade = getLowestSslGrade(prevSslInfo.endpoints);
+
+        servers_changed = (ssl_LowestGrade !== previous_ssl_grade) ? true : false
+
         dataPage = await getDataFromPage(domain);
         for (let i = 0; i < endpoints.length; i++) {
 
@@ -66,9 +78,9 @@ app.get('/', async (req, resp) => {
         resp.status(200).json({
             status: sslInfo.status,
             servers,
-            servers_changed: '',
-            ssl_grade: '',
-            previous_ssl_grade: '',
+            servers_changed,
+            ssl_grade: ssl_LowestGrade,
+            previous_ssl_grade,
             ...dataPage,
             is_down: false,
 
@@ -89,7 +101,7 @@ app.get('/', async (req, resp) => {
 
 })
 
-var sslInformation = (domain, cache, startNew) => {
+var sslInformation = (domain, cache, startNew, resp) => {
     let key = '';
     let val = '';
     if (cache == 'true') {
@@ -131,7 +143,7 @@ var additionalInfo = async (ipAddress) => {
 }
 
 
-var getDataFromPage = (domain) => {
+var getDataFromPage = (domain, resp) => {
 
     return new Promise((resolve, reject) => {
         request('http://www.' + domain, function (error, response, html) {
@@ -148,11 +160,23 @@ var getDataFromPage = (domain) => {
                 });
 
             } else {
-                console.log(error);
-                reject('error obteniendo logo y titulo', error);
+                console.log('Error obteniendo logo y titulo', error)
+                resolve({
+                    title: '',
+                    logo: ''
+                });
             }
         });
     });
+}
+
+var getLowestSslGrade = (endpoints) => {
+
+    let lowesSslGrade = '';
+    for (let i = 0; i < endpoints.length; i++) {
+        lowesSslGrade = lowesSslGrade > endpoints[i].grade ? lowesSslGrade : endpoints[i].grade;
+    }
+    return lowesSslGrade;
 
 }
 
