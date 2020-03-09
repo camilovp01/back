@@ -5,6 +5,32 @@ const util = require('../utils/utils');
 
 const app = express();
 
+/**
+ * @swagger
+ * /infodomain/gethistory:
+ *   get:
+ *     summary: Retorna una lista de dominios consultados
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *     responses:
+ *       200:
+ *         description: Lista retornada correctamente
+ *         schema:
+ *           type: object
+ *           properties:
+ *             items:
+ *               type: array
+ *               name_sh:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *               example:
+ *                 - name_sh: ejemplo.com
+ *                 - name_sh: ejemplo.com
+ * 
+*/
 app.get('/gethistory', async (req, resp) => {
     let history = await bridge.getSearchHistory();
     resp.status(200).json({
@@ -12,6 +38,33 @@ app.get('/gethistory', async (req, resp) => {
     });
 });
 
+/**
+ * @swagger
+ * /infodomain/saveHistory:
+ *   post:
+ *     summary: Guarda el nombre del dominio buscado
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: body
+ *         in: body
+ *         type: object
+ *         schema:
+ *           type: object
+ *           properties:
+ *             domain:
+ *               type: string 
+ *     responses:
+ *       200:
+ *         description: Filas insertadas
+ *         schema:
+ *           type: object
+ *           properties:
+ *             rowCount:
+ *               type: number
+ *           example:
+ *             rowCount: 1
+*/
 app.post('/saveHistory', async (req, respo) => {
     let domain = req.body.domain;
     let result = await bridge.insertHistory(domain);
@@ -20,6 +73,64 @@ app.post('/saveHistory', async (req, respo) => {
     });
 });
 
+
+/**
+ * @swagger
+ * /infodomain:
+ *   get:
+ *     summary: Consulta información de dominio
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *      - in: query
+ *        name: domain
+ *        required: true
+ *        description: Nombre el dominio
+ *      - in: query
+ *        name: cache
+ *        required: true
+ *        description: true o false
+ *      - in: query
+ *        name: startNew
+ *        required: true
+ *        description: true o false
+ *     responses:
+ *       200:
+ *         description: Lista de datos SSL e información de dominio
+ *         schema:
+ *           type: object
+ *           properties:
+ *             status:
+ *               type: string
+ *             servers:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   address:
+ *                     type: string
+ *                   ssl_grade:
+ *                     type: string
+ *                   country:
+ *                     type: string
+ *                   owner:
+ *                     type: string
+ *                   progress:
+ *                     type: integer
+ *             servers_changed:
+ *               type: boolean
+ *             ssl_grade:
+ *               type: string
+ *             previous_ssl_grade:
+ *               type: string
+ *             logo:
+ *               type: string
+ *             title:
+ *               type: string
+ *             is_down:
+ *               type: boolean
+ * 
+ */
 app.get('/', async (req, resp) => {
 
     let domain = req.query.domain;
